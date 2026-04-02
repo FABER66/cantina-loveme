@@ -27,7 +27,7 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
 .loc-pill.active{background:white;color:var(--wine);font-weight:500;border-color:white;}
 .loc-pill.add-loc{border-style:dashed;opacity:0.6;}
 .tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:82px;z-index:90;}
-.tab{flex:1;padding:10px 4px;font-size:11px;text-align:center;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:0.5px;text-transform:uppercase;}
+.tab{flex:1;padding:10px 2px;font-size:10px;text-align:center;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:0.5px;text-transform:uppercase;}
 .tab.active{color:var(--wine);border-bottom-color:var(--wine);font-weight:500;}
 .search-bar{padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;}
 .search-bar input{flex:1;padding:8px 14px;border:1px solid var(--border);border-radius:20px;font-size:13px;background:var(--bg2);color:var(--text);outline:none;font-family:'Jost',sans-serif;}
@@ -111,6 +111,7 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
 .cat-liquore{background:var(--gold-light);color:#856404;}
 .cat-birra{background:#E8F5E9;color:#2E7D32;}
 .cat-soft{background:#E3F2FD;color:#1565C0;}
+.cat-bollicine{background:#FEF9E7;color:#7D6608;}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1A1008;color:white;padding:10px 20px;border-radius:20px;font-size:13px;z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;}
 .spacer{height:100px;}
@@ -218,6 +219,7 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
   <div class="tabs">
     <div class="tab active" onclick="filterCat('all',this)">Tutti</div>
     <div class="tab" onclick="filterCat('vino',this)">Vini</div>
+    <div class="tab" onclick="filterCat('bollicine',this)">Bollicine</div>
     <div class="tab" onclick="filterCat('liquore',this)">Spirits</div>
     <div class="tab" onclick="filterCat('birra',this)">Birra</div>
     <div class="tab" onclick="filterCat('soft',this)">Analcol.</div>
@@ -323,6 +325,7 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
         <label>Categoria *</label>
         <select id="fCat">
           <option value="vino">Vino</option>
+          <option value="bollicine">Bollicine</option>
           <option value="liquore">Liquore / Spirits</option>
           <option value="birra">Birra</option>
           <option value="soft">Analcolico</option>
@@ -396,8 +399,8 @@ let isAdmin=false,editingId=null,currentCat='all',currentLoc=null,searchQ='';
 let locali=[],products=[];
 let scannerMode=null,scannerStream=null;
 
-const CAT_EMOJI={vino:'🍷',liquore:'🥃',birra:'🍺',soft:'🧃'};
-const CAT_LABEL={vino:'Vino',liquore:'Liquore',birra:'Birra',soft:'Analcolico'};
+const CAT_EMOJI={vino:"🍷",bollicine:"🥂",liquore:"🥃",birra:"🍺",soft:"🧃"};
+const CAT_LABEL={vino:"Vino",bollicine:"Bollicine",liquore:"Liquore",birra:"Birra",soft:"Analcolico"};
 const CAT_COLOR={vino:'var(--wine)',liquore:'#856404',birra:'#2E7D32',soft:'#1565C0'};
 
 function adminHeader(){return isAdmin?{'x-admin-key':ADMIN_PASSWORD}:{};}
