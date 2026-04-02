@@ -1,5 +1,7 @@
 {
   "functions": {
-    "api/db.js": { "runtime": "edge" }
+    "api/db.js": {
+      "runtime": "nodejs20.x"
+    }
   }
 }
