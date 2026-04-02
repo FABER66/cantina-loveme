@@ -8,13 +8,12 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --wine:#8B2635;--wine-dark:#6B1A28;--wine-light:#F5E6E8;
+  --wine:#8B2635;--wine-light:#F5E6E8;
   --gold:#C9952A;--gold-light:#FDF6E3;
-  --cream:#FAF8F4;--cream2:#F2EFE8;
   --text:#1A1008;--muted:#7A6E64;
   --bg:#FFFFFF;--bg2:#FAF8F4;--border:#E8E0D5;--radius:12px;
 }
-html,body{height:100%;background:var(--cream);}
+html,body{height:100%;background:#FAF8F4;}
 body{font-family:'Jost',sans-serif;color:var(--text);}
 .topbar{background:var(--wine);color:white;padding:12px 16px 0;position:sticky;top:0;z-index:100;}
 .topbar-main{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
@@ -30,9 +29,10 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
 .tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:82px;z-index:90;}
 .tab{flex:1;padding:10px 4px;font-size:11px;text-align:center;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;letter-spacing:0.5px;text-transform:uppercase;}
 .tab.active{color:var(--wine);border-bottom-color:var(--wine);font-weight:500;}
-.search-bar{padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--border);}
-.search-bar input{width:100%;padding:8px 14px;border:1px solid var(--border);border-radius:20px;font-size:13px;background:var(--bg2);color:var(--text);outline:none;font-family:'Jost',sans-serif;}
+.search-bar{padding:10px 14px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;}
+.search-bar input{flex:1;padding:8px 14px;border:1px solid var(--border);border-radius:20px;font-size:13px;background:var(--bg2);color:var(--text);outline:none;font-family:'Jost',sans-serif;}
 .search-bar input:focus{border-color:var(--wine);}
+.scan-btn{width:36px;height:36px;border-radius:50%;background:var(--wine);border:none;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .products{padding:14px;display:flex;flex-direction:column;gap:10px;}
 .product-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;align-items:stretch;}
 .client-card{border-left:3px solid var(--wine);}
@@ -41,6 +41,7 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
 .product-body{flex:1;padding:10px 12px;min-width:0;}
 .product-name{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;color:var(--text);line-height:1.2;}
 .product-desc{font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:0.3px;}
+.barcode-chip{display:inline-flex;align-items:center;gap:3px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:1px 6px;font-size:10px;color:var(--muted);margin-top:3px;font-family:monospace;}
 .price-row{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;}
 .price-pill{display:flex;flex-direction:column;align-items:center;background:var(--bg2);border-radius:7px;padding:3px 9px;min-width:54px;}
 .price-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
@@ -73,6 +74,9 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
 .form-group label{display:block;font-size:11px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.5px;}
 .form-group input,.form-group select{width:100%;border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:14px;background:var(--bg2);color:var(--text);outline:none;font-family:'Jost',sans-serif;}
 .form-group input:focus,.form-group select:focus{border-color:var(--wine);}
+.input-with-btn{display:flex;gap:6px;align-items:center;}
+.input-with-btn input{flex:1;}
+.input-scan-btn{width:38px;height:38px;border-radius:8px;background:var(--wine);border:none;color:white;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .modal-actions{display:flex;gap:8px;margin-top:14px;}
 .btn-save{flex:1;background:var(--wine);color:white;border:none;border-radius:10px;padding:12px;font-size:14px;cursor:pointer;font-weight:500;font-family:'Jost',sans-serif;}
@@ -106,6 +110,19 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1A1008;color:white;padding:10px 20px;border-radius:20px;font-size:13px;z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;}
 .spacer{height:100px;}
+
+/* SCANNER */
+.scanner-modal{display:none;position:fixed;inset:0;background:#000;z-index:400;flex-direction:column;}
+.scanner-modal.open{display:flex;}
+.scanner-header{padding:16px;display:flex;align-items:center;justify-content:space-between;color:white;background:rgba(0,0,0,0.5);position:absolute;top:0;left:0;right:0;z-index:10;}
+.scanner-title{font-size:16px;font-weight:500;}
+.scanner-close{background:rgba(255,255,255,0.2);border:none;color:white;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+#scannerVideo{width:100%;height:100%;object-fit:cover;}
+.scanner-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.scanner-frame{width:260px;height:160px;border:2px solid white;border-radius:12px;box-shadow:0 0 0 9999px rgba(0,0,0,0.5);}
+.scanner-hint{position:absolute;bottom:60px;left:0;right:0;text-align:center;color:white;font-size:13px;opacity:0.8;}
+.scanner-line{position:absolute;top:0;left:0;right:0;height:2px;background:var(--wine);animation:scanline 2s linear infinite;}
+@keyframes scanline{0%{top:0}100%{top:100%}}
 </style>
 </head>
 <body>
@@ -128,7 +145,8 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
     <div class="tab" onclick="filterCat('soft',this)">Analcol.</div>
   </div>
   <div class="search-bar">
-    <input type="text" placeholder="Cerca prodotto..." oninput="doSearch(this.value)" />
+    <input type="text" id="searchInput" placeholder="Cerca prodotto o codice..." oninput="doSearch(this.value)" />
+    <button class="scan-btn" onclick="openScanner('search')" title="Scansiona codice a barre">📷</button>
   </div>
   <div class="products" id="productList">
     <div class="loading"><div class="loading-spinner"></div><div>Caricamento...</div></div>
@@ -141,6 +159,22 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
   <button class="admin-corner-btn" id="adminCornerBtn" onclick="openPwModal()">🔒</button>
 </div>
 <div class="toast" id="toast"></div>
+
+<!-- SCANNER MODAL -->
+<div class="scanner-modal" id="scannerModal">
+  <div class="scanner-header">
+    <div class="scanner-title" id="scannerTitle">Scansiona codice a barre</div>
+    <button class="scanner-close" onclick="closeScanner()">✕</button>
+  </div>
+  <video id="scannerVideo" autoplay playsinline muted></video>
+  <div class="scanner-overlay">
+    <div style="position:relative;width:260px;height:160px;">
+      <div class="scanner-frame"></div>
+      <div class="scanner-line"></div>
+    </div>
+  </div>
+  <div class="scanner-hint">Inquadra il codice a barre del prodotto</div>
+</div>
 
 <!-- MODAL PASSWORD -->
 <div class="modal-bg" id="pwModalBg">
@@ -193,6 +227,13 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
     <div class="form-group">
       <label>Descrizione</label>
       <input type="text" id="fDesc" placeholder="es. DOCG, Toscana, 2019" />
+    </div>
+    <div class="form-group">
+      <label>Codice a barre</label>
+      <div class="input-with-btn">
+        <input type="text" id="fBarcode" placeholder="es. 8001234567890" />
+        <button class="input-scan-btn" onclick="openScanner('form')" title="Scansiona">📷</button>
+      </div>
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -264,22 +305,23 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
   </div>
 </div>
 
-<script>
-// ── CONFIG — nessuna chiave segreta qui ──────────────
-const ADMIN_PASSWORD = 'loveme2024';
-const API = '/api/db'; // proxy serverless su Vercel
+<!-- QuaggaJS per lettura barcode -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
 
-// ── STATE ────────────────────────────────────────────
-let isAdmin=false, editingId=null, currentCat='all', currentLoc=null, searchQ='';
-let locali=[], products=[];
+<script>
+const ADMIN_PASSWORD = 'loveme2024';
+const API = '/api/db';
+let isAdmin=false,editingId=null,currentCat='all',currentLoc=null,searchQ='';
+let locali=[],products=[];
+let scannerMode=null; // 'search' | 'form'
+let scannerStream=null;
+let scannerActive=false;
 
 const CAT_EMOJI={vino:'🍷',liquore:'🥃',birra:'🍺',soft:'🧃'};
 const CAT_LABEL={vino:'Vino',liquore:'Liquore',birra:'Birra',soft:'Analcolico'};
 
-// ── API HELPERS ──────────────────────────────────────
-function adminHeader(){ return isAdmin?{'x-admin-key':ADMIN_PASSWORD}:{}; }
-
-async function apiGet(table, params={}){
+function adminHeader(){return isAdmin?{'x-admin-key':ADMIN_PASSWORD}:{};}
+async function apiGet(table,params={}){
   const q=new URLSearchParams({table,...params});
   const r=await fetch(`${API}?${q}`,{headers:adminHeader()});
   return r.json();
@@ -300,13 +342,12 @@ async function apiUpsert(table,body,on_conflict){
   return r.json();
 }
 
-// ── LOAD ─────────────────────────────────────────────
 async function loadAll(){
   document.getElementById('productList').innerHTML='<div class="loading"><div class="loading-spinner"></div><div>Caricamento...</div></div>';
   try{
     locali=await apiGet('locali',{order:'ordine'});
     if(!locali.length){showToast('Nessun locale trovato');return;}
-    if(!currentLoc) currentLoc=locali[0].id;
+    if(!currentLoc)currentLoc=locali[0].id;
     const prods=await apiGet('prodotti',{order:'nome'});
     const prezzi=await apiGet('prezzi_locale');
     products=prods.map(p=>{
@@ -315,15 +356,13 @@ async function loadAll(){
       return{...p,prezzi:pz};
     });
   }catch(e){showToast('Errore connessione');}
-  renderLocsPills();
-  render();
+  renderLocsPills();render();
 }
 
-// ── RENDER PILLS ─────────────────────────────────────
 function renderLocsPills(){
   const el=document.getElementById('locsList');
   let html=locali.map(l=>`<div class="loc-pill${l.id===currentLoc?' active':''}" onclick="switchLoc('${l.id}')">${l.nome}</div>`).join('');
-  if(isAdmin) html+=`<div class="loc-pill add-loc" onclick="openLocaliModal()">+ Locale</div>`;
+  if(isAdmin)html+=`<div class="loc-pill add-loc" onclick="openLocaliModal()">+ Locale</div>`;
   el.innerHTML=html;
 }
 function switchLoc(id){
@@ -339,7 +378,6 @@ function filterCat(cat,el){
 }
 function doSearch(q){searchQ=q.toLowerCase();render();}
 
-// ── RENDER CARDS ─────────────────────────────────────
 function r2(n){return Math.round(n*100)/100;}
 function fmt(n){return n!=null&&n>0?'€'+parseFloat(n).toFixed(2):'—';}
 function calcMargine(acq,iva,prezzo){
@@ -352,7 +390,10 @@ function render(){
   const list=document.getElementById('productList');
   const filtered=products.filter(p=>{
     const mc=currentCat==='all'||p.categoria===currentCat;
-    const mq=!searchQ||p.nome.toLowerCase().includes(searchQ)||(p.descrizione||'').toLowerCase().includes(searchQ);
+    const mq=!searchQ||
+      p.nome.toLowerCase().includes(searchQ)||
+      (p.descrizione||'').toLowerCase().includes(searchQ)||
+      (p.barcode||'').includes(searchQ);
     return mc&&mq;
   });
   if(!filtered.length){list.innerHTML='<div class="empty">Nessun prodotto trovato</div>';return;}
@@ -365,8 +406,83 @@ function render(){
     const prices=`${ap}<div class="price-pill sale"><span class="price-label">Bottiglia</span><span class="price-val">${fmt(bott)}</span></div>${bic?`<div class="price-pill"><span class="price-label">Bicchiere</span><span class="price-val">${fmt(bic)}</span></div>`:''}`;
     const actions=isAdmin?`<div class="card-actions"><button class="btn-edit" onclick="editProduct('${p.id}')">✏️</button><button class="btn-del" onclick="deleteProduct('${p.id}')">🗑</button></div>`:'';
     const ivaInfo=isAdmin?`<span style="font-size:10px;color:var(--muted)"> · IVA ${p.iva}% · ${p.cl}cl</span>`:'';
-    return`<div class="product-card${!isAdmin?' client-card':''}"><div class="product-img">${img}</div><div class="product-body"><div class="cat-badge cat-${p.categoria}">${CAT_LABEL[p.categoria]||p.categoria}</div><div class="product-name">${p.nome}</div><div class="product-desc">${p.descrizione||''}${ivaInfo}</div><div class="price-row">${prices}</div>${p.note?`<div style="font-size:10px;color:var(--muted);margin-top:3px">${p.note}</div>`:''}</div>${actions}</div>`;
+    const barcodeChip=p.barcode?`<div class="barcode-chip">▋▋ ${p.barcode}</div>`:'';
+    return`<div class="product-card${!isAdmin?' client-card':''}"><div class="product-img">${img}</div><div class="product-body"><div class="cat-badge cat-${p.categoria}">${CAT_LABEL[p.categoria]||p.categoria}</div><div class="product-name">${p.nome}</div><div class="product-desc">${p.descrizione||''}${ivaInfo}</div>${barcodeChip}<div class="price-row">${prices}</div>${p.note?`<div style="font-size:10px;color:var(--muted);margin-top:3px">${p.note}</div>`:''}</div>${actions}</div>`;
   }).join('');
+}
+
+// ── SCANNER ──────────────────────────────────────────
+function openScanner(mode){
+  scannerMode=mode;
+  document.getElementById('scannerTitle').textContent=mode==='search'?'Cerca per codice a barre':'Scansiona codice prodotto';
+  document.getElementById('scannerModal').classList.add('open');
+  startCamera();
+}
+
+async function startCamera(){
+  try{
+    scannerStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}});
+    const video=document.getElementById('scannerVideo');
+    video.srcObject=scannerStream;
+    await video.play();
+    scannerActive=true;
+    startQuagga();
+  }catch(e){
+    showToast('Fotocamera non disponibile');
+    closeScanner();
+  }
+}
+
+function startQuagga(){
+  const video=document.getElementById('scannerVideo');
+  Quagga.init({
+    inputStream:{
+      type:'LiveStream',
+      target:video,
+      constraints:{facingMode:'environment'}
+    },
+    decoder:{
+      readers:['ean_reader','ean_8_reader','code_128_reader','code_39_reader','upc_reader','upc_e_reader']
+    },
+    locate:true,
+  },function(err){
+    if(err){console.error(err);return;}
+    Quagga.start();
+  });
+
+  Quagga.onDetected(function(result){
+    const code=result.codeResult.code;
+    if(!code)return;
+    onBarcodeDetected(code);
+  });
+}
+
+function onBarcodeDetected(code){
+  stopQuagga();
+  closeScanner();
+  if(scannerMode==='search'){
+    document.getElementById('searchInput').value=code;
+    doSearch(code);
+    showToast('Codice: '+code);
+  } else if(scannerMode==='form'){
+    document.getElementById('fBarcode').value=code;
+    showToast('Codice inserito: '+code);
+  }
+}
+
+function stopQuagga(){
+  try{Quagga.stop();}catch(e){}
+}
+
+function closeScanner(){
+  stopQuagga();
+  if(scannerStream){
+    scannerStream.getTracks().forEach(t=>t.stop());
+    scannerStream=null;
+  }
+  scannerActive=false;
+  document.getElementById('scannerModal').classList.remove('open');
+  document.getElementById('scannerVideo').srcObject=null;
 }
 
 // ── CALCOLO ──────────────────────────────────────────
@@ -391,8 +507,8 @@ function ricalcola(){
 function updatePlaceholders(sB,sBic){
   locali.forEach(l=>{
     const b=document.getElementById('lp_bott_'+l.id),bic=document.getElementById('lp_bic_'+l.id);
-    if(b) b.placeholder=sB?'€'+sB.toFixed(2)+' (sugg.)':'0.00';
-    if(bic) bic.placeholder=sBic?'€'+sBic.toFixed(2)+' (sugg.)':'—';
+    if(b)b.placeholder=sB?'€'+sB.toFixed(2)+' (sugg.)':'0.00';
+    if(bic)bic.placeholder=sBic?'€'+sBic.toFixed(2)+' (sugg.)':'—';
   });
 }
 function getSuggested(){
@@ -411,9 +527,8 @@ function openLocaliModal(){renderLocaliList();document.getElementById('newLocNam
 function closeLocaliModal(){document.getElementById('localiModalBg').classList.remove('open');}
 function renderLocaliList(){
   document.getElementById('localiList').innerHTML=locali.map(l=>`
-    <div class="locale-item">
-      <div class="locale-item-name">${l.nome}</div>
-      ${locali.length>1?`<button class="locale-item-del" onclick="deleteLocale('${l.id}')">Elimina</button>`:'<span style="font-size:11px;color:var(--muted)">Principale</span>'}
+    <div class="locale-item"><div class="locale-item-name">${l.nome}</div>
+    ${locali.length>1?`<button class="locale-item-del" onclick="deleteLocale('${l.id}')">Elimina</button>`:'<span style="font-size:11px;color:var(--muted)">Principale</span>'}
     </div>`).join('');
 }
 async function addLocale(){
@@ -457,7 +572,8 @@ function openProdModal(id=null){
   document.getElementById('prodModalTitle').textContent=p?'Modifica Prodotto':'Nuovo Prodotto';
   document.getElementById('prodModalSub').textContent=p?'Modifica prezzi per ogni locale':'Disponibile in tutti i locali con prezzi personalizzabili';
   document.getElementById('fNome').value=p?p.nome:'';
-  document.getElementById('fDesc').value=p?p.descrizione:'';
+  document.getElementById('fDesc').value=p?p.descrizione||'':'';
+  document.getElementById('fBarcode').value=p?p.barcode||'':'';
   document.getElementById('fCat').value=p?p.categoria:'vino';
   document.getElementById('fCl').value=p?p.cl:75;
   document.getElementById('fFoto').value=p?p.foto_url||'':'';
@@ -485,7 +601,9 @@ async function saveProduct(){
   btn.textContent='Salvataggio...';btn.disabled=true;
   const{b,bic}=getSuggested();
   const data={
-    nome,descrizione:document.getElementById('fDesc').value.trim(),
+    nome,
+    descrizione:document.getElementById('fDesc').value.trim(),
+    barcode:document.getElementById('fBarcode').value.trim()||null,
     categoria:document.getElementById('fCat').value,
     cl:parseFloat(document.getElementById('fCl').value)||75,
     foto_url:document.getElementById('fFoto').value.trim()||null,
