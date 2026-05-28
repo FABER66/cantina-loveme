@@ -202,6 +202,31 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
 .scanner-hint{position:absolute;bottom:60px;left:0;right:0;text-align:center;color:white;font-size:13px;opacity:0.8;}
 .scanner-line{position:absolute;top:0;left:0;right:0;height:2px;background:var(--wine);animation:scanline 2s linear infinite;}
 @keyframes scanline{0%{top:0}100%{top:100%}}
+
+/* IMPORT FATTURA */
+.fab.import{bottom:138px;background:var(--gold);box-shadow:0 4px 16px rgba(201,149,42,0.4);font-size:22px;}
+.import-drop{border:2px dashed var(--border);border-radius:12px;padding:26px 16px;background:var(--bg2);text-align:center;cursor:pointer;transition:border-color 0.15s;}
+.import-drop.hover{border-color:var(--gold);}
+.import-files{margin-top:10px;display:flex;flex-direction:column;gap:5px;}
+.import-file-chip{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;font-size:12px;}
+.import-file-chip .rm{background:none;border:none;color:#C0392B;cursor:pointer;font-size:14px;}
+.imp-row{border:1px solid var(--border);border-radius:12px;padding:11px 12px;margin-bottom:10px;background:var(--bg);}
+.imp-row.off{opacity:0.45;}
+.imp-row-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.imp-row-head input[type=checkbox]{width:18px;height:18px;flex-shrink:0;accent-color:var(--wine);}
+.imp-row-head .imp-nome{flex:1;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;border:none;background:none;color:var(--text);outline:none;border-bottom:1px solid transparent;padding:2px 0;}
+.imp-row-head .imp-nome:focus{border-bottom-color:var(--gold);}
+.imp-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px;}
+.imp-grid .imp-field label{display:block;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:2px;}
+.imp-grid .imp-field input,.imp-grid .imp-field select{width:100%;border:1px solid var(--border);border-radius:7px;padding:6px 8px;font-size:13px;background:var(--bg2);color:var(--text);outline:none;font-family:'Jost',sans-serif;}
+.imp-field.full{grid-column:1 / -1;}
+.imp-photo{display:flex;gap:6px;align-items:center;margin-top:8px;flex-wrap:wrap;}
+.imp-photo-thumb{width:46px;height:58px;object-fit:contain;background:var(--bg2);border:2px solid var(--border);border-radius:6px;cursor:pointer;}
+.imp-photo-thumb.sel{border-color:var(--wine);box-shadow:0 0 0 2px var(--wine-light);}
+.imp-photo-btn{background:var(--gold-light);border:1px solid #E8D9B0;color:#856404;border-radius:7px;padding:6px 10px;font-size:12px;cursor:pointer;}
+.imp-mar{font-size:10px;color:var(--muted);margin-top:4px;}
+.imp-progress{height:6px;background:var(--border);border-radius:4px;overflow:hidden;margin:8px 0;}
+.imp-progress > div{height:100%;background:var(--wine);width:0;transition:width 0.2s;}
 </style>
 </head>
 <body>
@@ -234,6 +259,7 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
   <div class="spacer"></div>
 </div>
 
+<button class="fab import" id="importBtn" onclick="openImportModal()" title="Importa da fattura">📄</button>
 <button class="fab" id="fabBtn" onclick="openProdModal()">+</button>
 <div class="admin-corner">
   <button class="admin-corner-btn" id="adminCornerBtn" onclick="openPwModal()">🔒</button>
@@ -407,6 +433,16 @@ body{font-family:'Jost',sans-serif;color:var(--text);}
       <button class="btn-cancel" onclick="closeProdModal()">Annulla</button>
       <button class="btn-save" id="btnSaveProd" onclick="saveProduct()">Salva</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL IMPORT FATTURA -->
+<div class="modal-bg" id="importModalBg">
+  <div class="modal-sheet">
+    <div class="modal-title">📄 Importa da fattura</div>
+    <div class="modal-sub" id="importSub">Carica la fattura: l'AI estrae i vini, tu confermi prezzi e foto.</div>
+    <div id="importBody"></div>
+    <input type="file" id="importFileInput" accept="application/pdf,image/*,.xml,text/xml" multiple style="display:none" onchange="onImportFiles(this.files)" />
   </div>
 </div>
 
@@ -677,10 +713,10 @@ function openPwModal(){
 function closePwModal(){document.getElementById('pwModalBg').classList.remove('open');}
 function togglePw(){const i=document.getElementById('pwInput');i.type=i.type==='password'?'text':'password';}
 function doLogin(){
-  if(document.getElementById('pwInput').value===ADMIN_PASSWORD){isAdmin=true;document.getElementById('adminBadgeTop').classList.add('visible');document.getElementById('adminCornerBtn').classList.add('logged');document.getElementById('adminCornerBtn').textContent='🔓';document.getElementById('fabBtn').classList.add('visible');closePwModal();renderLocsPills();render();showToast('Benvenuto Admin');}
+  if(document.getElementById('pwInput').value===ADMIN_PASSWORD){isAdmin=true;document.getElementById('adminBadgeTop').classList.add('visible');document.getElementById('adminCornerBtn').classList.add('logged');document.getElementById('adminCornerBtn').textContent='🔓';document.getElementById('fabBtn').classList.add('visible');document.getElementById('importBtn').classList.add('visible');closePwModal();renderLocsPills();render();showToast('Benvenuto Admin');}
   else{const err=document.getElementById('pwError');err.textContent='Password errata. Riprova.';document.getElementById('pwInput').value='';document.getElementById('pwInput').focus();setTimeout(()=>err.textContent='',3000);}
 }
-function doLogout(){isAdmin=false;document.getElementById('adminBadgeTop').classList.remove('visible');document.getElementById('adminCornerBtn').classList.remove('logged');document.getElementById('adminCornerBtn').textContent='🔒';document.getElementById('fabBtn').classList.remove('visible');closePwModal();renderLocsPills();render();}
+function doLogout(){isAdmin=false;document.getElementById('adminBadgeTop').classList.remove('visible');document.getElementById('adminCornerBtn').classList.remove('logged');document.getElementById('adminCornerBtn').textContent='🔒';document.getElementById('fabBtn').classList.remove('visible');document.getElementById('importBtn').classList.remove('visible');closePwModal();renderLocsPills();render();}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
 document.getElementById('pwModalBg').addEventListener('click',function(e){if(e.target===this)closePwModal();});
@@ -739,6 +775,120 @@ function initFotoField(url){
   if(url){setFotoUrl(url);}
   else{document.getElementById('fotoUrlRow').style.display='none';}
 }
+
+// ── IMPORT FATTURA ───────────────────────────────────
+let importFiles=[],importItems=[];
+function openImportModal(){importFiles=[];importItems=[];renderImportUpload();document.getElementById('importModalBg').classList.add('open');}
+function closeImportModal(){document.getElementById('importModalBg').classList.remove('open');}
+function renderImportUpload(){
+  document.getElementById('importSub').textContent="Carica la fattura: l'AI estrae i vini, tu confermi prezzi e foto.";
+  const filesHtml=importFiles.map((f,i)=>`<div class="import-file-chip"><span>${f.icon} ${f.name}</span><button class="rm" onclick="removeImportFile(${i})">✕</button></div>`).join('');
+  document.getElementById('importBody').innerHTML=`
+    <div class="import-drop" onclick="document.getElementById('importFileInput').click()">
+      <div style="font-size:30px;margin-bottom:6px">🧾</div>
+      <div style="font-size:14px;color:var(--text)">Tocca per caricare la fattura</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">PDF, foto (anche più pagine) o XML elettronico</div>
+    </div>
+    <div class="import-files">${filesHtml}</div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeImportModal()">Annulla</button>
+      <button class="btn-save" onclick="analyzeInvoice()" ${importFiles.length?'':'disabled style="opacity:0.5"'}>Analizza fattura</button>
+    </div>`;
+}
+function fileKind(f){const t=f.type||'',n=f.name.toLowerCase();if(t==='application/pdf'||n.endsWith('.pdf'))return'pdf';if(t.includes('xml')||n.endsWith('.xml'))return'xml';if(t.startsWith('image/'))return'image';return null;}
+function onImportFiles(files){for(const f of files){const k=fileKind(f);if(!k){showToast('Formato non supportato: '+f.name);continue;}importFiles.push({file:f,kind:k,name:f.name,icon:k==='pdf'?'📕':k==='xml'?'🧾':'🖼️'});}renderImportUpload();}
+function removeImportFile(i){importFiles.splice(i,1);renderImportUpload();}
+function readAsBase64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});}
+function readAsText(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsText(file);});}
+async function analyzeInvoice(){
+  if(!importFiles.length)return;
+  document.getElementById('importBody').innerHTML=`<div class="loading"><div class="loading-spinner"></div><div>L'AI sta leggendo la fattura...</div><div style="font-size:11px;margin-top:6px;color:var(--muted)">Può richiedere 10-20 secondi</div></div>`;
+  try{
+    let body;
+    const xmlFile=importFiles.find(f=>f.kind==='xml'),pdfFile=importFiles.find(f=>f.kind==='pdf'),imgFiles=importFiles.filter(f=>f.kind==='image');
+    if(xmlFile){body={kind:'xml',data:await readAsText(xmlFile.file)};}
+    else if(pdfFile){body={kind:'pdf',data:await readAsBase64(pdfFile.file)};}
+    else if(imgFiles.length){const images=[];for(const f of imgFiles){images.push({data:await readAsBase64(f.file),mediaType:f.file.type||'image/jpeg'});}body={kind:'image',images};}
+    else{showToast('Nessun file valido');renderImportUpload();return;}
+    const r=await fetch('/api/extract-invoice',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':ADMIN_PASSWORD},body:JSON.stringify(body)});
+    const data=await r.json();
+    if(!r.ok)throw new Error(data.error||'Estrazione fallita');
+    if(!data.items||!data.items.length){document.getElementById('importBody').innerHTML=`<div class="empty">Nessun prodotto riconosciuto.</div><div class="modal-actions"><button class="btn-cancel" onclick="renderImportUpload()">← Riprova</button></div>`;return;}
+    importItems=data.items.map((it,i)=>({...it,_id:i,include:true,photos:[],photoUrl:null,photoLoading:false,prezzo_vendita:null,prezzo_bicchiere:null}));
+    renderImportReview();
+  }catch(e){document.getElementById('importBody').innerHTML=`<div class="empty">Errore: ${e.message}</div><div class="modal-actions"><button class="btn-cancel" onclick="renderImportUpload()">← Riprova</button></div>`;}
+}
+function suggestPrices(acq,iva,cl){if(!acq)return{b:0,bic:0};const netto=acq/(1+(iva||22)/100);return{b:r2(netto*(1+150/100)),bic:r2((netto/(cl||75)*10)*(1+300/100))};}
+function escAttr(s){return String(s==null?'':s).replace(/"/g,'&quot;');}
+function renderImportReview(){
+  document.getElementById('importSub').textContent=`${importItems.length} prodotti riconosciuti. Controlla prezzi e scegli le foto.`;
+  const rows=importItems.map(it=>{
+    const sug=suggestPrices(it.prezzo_acquisto,it.iva,it.cl);
+    if(it.prezzo_vendita==null)it.prezzo_vendita=sug.b;
+    if(it.prezzo_bicchiere==null)it.prezzo_bicchiere=sug.bic;
+    const photosHtml=it.photoLoading?'<span style="font-size:11px;color:var(--muted)">cerco foto...</span>':it.photos.map((p,pi)=>`<img src="${p.thumb}" class="imp-photo-thumb${it.photoUrl===p.full?' sel':''}" onclick="pickPhoto(${it._id},${pi})" onerror="this.style.display='none'" />`).join('');
+    return `<div class="imp-row${it.include?'':' off'}" id="improw_${it._id}">
+      <div class="imp-row-head">
+        <input type="checkbox" ${it.include?'checked':''} onchange="toggleRow(${it._id},this.checked)" />
+        <input class="imp-nome" value="${escAttr(it.nome)}" onchange="editRow(${it._id},'nome',this.value)" />
+        <span class="cat-badge cat-${it.categoria}">${CAT_LABEL[it.categoria]||it.categoria}</span>
+      </div>
+      <div class="imp-grid">
+        <div class="imp-field full"><label>Descrizione</label><input value="${escAttr(it.descrizione)}" onchange="editRow(${it._id},'descrizione',this.value)" /></div>
+        <div class="imp-field"><label>Categoria</label><select onchange="editRow(${it._id},'categoria',this.value)">${['vino','bollicine','liquore','birra','soft'].map(c=>`<option value="${c}" ${it.categoria===c?'selected':''}>${CAT_LABEL[c]}</option>`).join('')}</select></div>
+        <div class="imp-field"><label>Contenuto (cl)</label><input type="number" value="${it.cl}" onchange="editRow(${it._id},'cl',this.value)" /></div>
+        <div class="imp-field"><label>Acquisto € (ivato)</label><input type="number" step="0.01" value="${it.prezzo_acquisto}" onchange="editRow(${it._id},'prezzo_acquisto',this.value)" /></div>
+        <div class="imp-field"><label>IVA %</label><input type="number" value="${it.iva}" onchange="editRow(${it._id},'iva',this.value)" /></div>
+        <div class="imp-field"><label>Vendita bottiglia €</label><input type="number" step="0.01" value="${it.prezzo_vendita}" onchange="editRow(${it._id},'prezzo_vendita',this.value)" /></div>
+        <div class="imp-field"><label>Vendita bicchiere €</label><input type="number" step="0.01" value="${it.prezzo_bicchiere||''}" onchange="editRow(${it._id},'prezzo_bicchiere',this.value)" /></div>
+      </div>
+      <div class="imp-mar" id="impmar_${it._id}"></div>
+      <div class="imp-photo">
+        <button class="imp-photo-btn" onclick="searchPhoto(${it._id})">🔍 Cerca foto</button>
+        ${photosHtml}
+        ${it.photoUrl?'<span style="font-size:11px;color:#1B6B3A">✓ scelta</span>':''}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('importBody').innerHTML=`
+    <div style="max-height:48vh;overflow-y:auto;margin-bottom:10px">${rows}</div>
+    <div id="impSaveProgress" style="display:none"><div class="imp-progress"><div id="impProgBar"></div></div><div id="impProgTxt" style="font-size:12px;color:var(--muted);text-align:center"></div></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="renderImportUpload()">← Indietro</button>
+      <button class="btn-save" id="impSaveBtn" onclick="saveImported()">Salva i selezionati</button>
+    </div>`;
+  importItems.forEach(it=>updateImpMargine(it._id));
+}
+function toggleRow(id,v){const it=importItems.find(x=>x._id===id);if(it)it.include=v;const el=document.getElementById('improw_'+id);if(el)el.classList.toggle('off',!v);}
+function editRow(id,field,val){const it=importItems.find(x=>x._id===id);if(!it)return;if(['cl','prezzo_acquisto','iva','prezzo_vendita','prezzo_bicchiere'].includes(field))val=parseFloat(val)||0;it[field]=val;if(['prezzo_acquisto','iva','prezzo_vendita'].includes(field))updateImpMargine(id);}
+function updateImpMargine(id){const it=importItems.find(x=>x._id===id);const el=document.getElementById('impmar_'+id);if(!it||!el)return;const m=calcMargine(it.prezzo_acquisto,it.iva,it.prezzo_vendita);el.textContent=m!=null?'Margine bottiglia: '+m.toFixed(0)+'%':'';}
+async function searchPhoto(id){
+  const it=importItems.find(x=>x._id===id);if(!it)return;
+  it.photoLoading=true;renderImportReview();
+  try{const r=await fetch(`/api/find-photo?q=${encodeURIComponent(it.nome+' '+(it.descrizione||''))}`,{headers:{'x-admin-key':ADMIN_PASSWORD}});const data=await r.json();it.photos=(data.results||[]).slice(0,4);if(!it.photos.length)showToast('Nessuna foto trovata');}catch(e){showToast('Errore ricerca foto');}
+  it.photoLoading=false;renderImportReview();
+}
+function pickPhoto(id,pi){const it=importItems.find(x=>x._id===id);if(!it)return;const p=it.photos[pi];it.photoUrl=(it.photoUrl===p.full)?null:p.full;renderImportReview();}
+async function saveImported(){
+  const sel=importItems.filter(it=>it.include);
+  if(!sel.length){showToast('Nessun prodotto selezionato');return;}
+  const btn=document.getElementById('impSaveBtn');btn.disabled=true;btn.textContent='Salvataggio...';
+  document.getElementById('impSaveProgress').style.display='block';
+  let done=0;
+  for(const it of sel){
+    try{
+      let foto_url=null;
+      if(it.photoUrl){try{const pr=await fetch('/api/save-photo',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':ADMIN_PASSWORD},body:JSON.stringify({url:it.photoUrl})});const pd=await pr.json();foto_url=pr.ok&&pd.url?pd.url:it.photoUrl;}catch(e){foto_url=it.photoUrl;}}
+      const data={nome:it.nome,descrizione:it.descrizione||null,barcode:it.barcode||null,categoria:it.categoria,cl:it.cl||75,foto_url,prezzo_acquisto:it.prezzo_acquisto||0,iva:it.iva||22,note:null};
+      const res=await apiPost('prodotti',data);const prodId=res[0].id;
+      for(const l of locali){await apiUpsert('prezzi_locale',{prodotto_id:prodId,locale_id:l.id,prezzo_bottiglia:it.prezzo_vendita||0,prezzo_bicchiere:it.prezzo_bicchiere||null},'prodotto_id,locale_id');}
+    }catch(e){}
+    done++;const pct=Math.round(done/sel.length*100);
+    const bar=document.getElementById('impProgBar'),txt=document.getElementById('impProgTxt');if(bar)bar.style.width=pct+'%';if(txt)txt.textContent=`${done}/${sel.length} salvati`;
+  }
+  await loadAll();closeImportModal();showToast(`${done} prodotti importati!`);
+}
+document.getElementById('importModalBg').addEventListener('click',function(e){if(e.target===this)closeImportModal();});
 
 loadAll();
 </script>
