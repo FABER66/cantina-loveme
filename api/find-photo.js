@@ -1,7 +1,9 @@
 // Cerca foto di una bottiglia sul web e restituisce qualche candidato da confermare.
 // GET ?q=<nome vino>  ->  { results:[ {thumb, full, src} ], engine }
-// Usa Google Custom Search se sono presenti GOOGLE_CSE_KEY + GOOGLE_CSE_CX,
-// altrimenti ripiega su DuckDuckGo (keyless).
+// Ordine: Google CSE (se GOOGLE_CSE_KEY+GOOGLE_CSE_CX) -> Bing (keyless) -> DuckDuckGo (keyless)
+const UA =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -11,26 +13,31 @@ export default async function handler(req, res) {
   if (req.headers['x-admin-key'] !== process.env.ADMIN_KEY) {
     return res.status(401).json({ error: 'Non autorizzato' });
   }
-
-  const q = ((req.query.q || '') + ' bottiglia vino').trim();
   if (!req.query.q) return res.status(400).json({ error: 'Manca q' });
+  const q = (req.query.q + ' bottiglia').trim();
 
-  const CSE_KEY = process.env.GOOGLE_CSE_KEY;
-  const CSE_CX = process.env.GOOGLE_CSE_CX;
-
-  try {
-    if (CSE_KEY && CSE_CX) {
-      const results = await googleImages(q, CSE_KEY, CSE_CX);
-      if (results.length) return res.status(200).json({ results, engine: 'google' });
-    }
-    const results = await duckImages(q);
-    return res.status(200).json({ results, engine: 'duckduckgo' });
-  } catch (e) {
-    return res.status(500).json({ error: e.message, results: [] });
+  const engines = [];
+  if (process.env.GOOGLE_CSE_KEY && process.env.GOOGLE_CSE_CX) {
+    engines.push(['google', () => googleImages(q)]);
   }
+  engines.push(['bing', () => bingImages(q)]);
+  engines.push(['duckduckgo', () => duckImages(q)]);
+
+  let lastErr = null;
+  for (const [name, fn] of engines) {
+    try {
+      const results = await fn();
+      if (results.length) return res.status(200).json({ results, engine: name });
+    } catch (e) {
+      lastErr = e.message;
+    }
+  }
+  return res.status(200).json({ results: [], engine: 'none', error: lastErr });
 }
 
-async function googleImages(q, key, cx) {
+async function googleImages(q) {
+  const key = process.env.GOOGLE_CSE_KEY,
+    cx = process.env.GOOGLE_CSE_CX;
   const url = `https://www.googleapis.com/customsearch/v1?key=${key}&cx=${cx}&searchType=image&num=5&safe=active&q=${encodeURIComponent(q)}`;
   const r = await fetch(url);
   const d = await r.json();
@@ -42,25 +49,50 @@ async function googleImages(q, key, cx) {
   }));
 }
 
+async function bingImages(q) {
+  const r = await fetch(`https://www.bing.com/images/search?q=${encodeURIComponent(q)}&form=HDRSC2&first=1`, {
+    headers: { 'User-Agent': UA, 'Accept-Language': 'it-IT,it;q=0.9' },
+  });
+  const html = await r.text();
+  const out = [];
+  const seen = new Set();
+  // i metadati di ogni risultato stanno in m="{...&quot;murl&quot;:&quot;<url>&quot;,&quot;turl&quot;:&quot;<thumb>&quot;...}"
+  const re = /murl&quot;:&quot;(.*?)&quot;[\s\S]*?turl&quot;:&quot;(.*?)&quot;/g;
+  let m;
+  while ((m = re.exec(html)) && out.length < 6) {
+    const full = decodeHtml(m[1]);
+    const thumb = decodeHtml(m[2]) || full;
+    if (/^https?:\/\//.test(full) && !seen.has(full)) {
+      seen.add(full);
+      out.push({ full, thumb, src: 'bing' });
+    }
+  }
+  return out;
+}
+
 async function duckImages(q) {
-  const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36';
-  // 1) ottieni il token vqd
   const tokenRes = await fetch(`https://duckduckgo.com/?q=${encodeURIComponent(q)}&iax=images&ia=images`, {
     headers: { 'User-Agent': UA },
   });
   const html = await tokenRes.text();
-  const m = html.match(/vqd=["']?([\d-]+)["']?/);
-  if (!m) throw new Error('Token ricerca non ottenuto');
-  const vqd = m[1];
-  // 2) richiedi i risultati immagini
+  const m = html.match(/vqd=["']?([\w-]{6,})["']?/);
+  if (!m) throw new Error('DDG: token non ottenuto');
   const r = await fetch(
-    `https://duckduckgo.com/i.js?l=it-it&o=json&q=${encodeURIComponent(q)}&vqd=${vqd}&f=,,,&p=1`,
-    { headers: { 'User-Agent': UA, Referer: 'https://duckduckgo.com/', 'Accept': 'application/json' } }
+    `https://duckduckgo.com/i.js?l=it-it&o=json&q=${encodeURIComponent(q)}&vqd=${m[1]}&f=,,,&p=1`,
+    { headers: { 'User-Agent': UA, Referer: 'https://duckduckgo.com/', Accept: 'application/json' } }
   );
   const d = await r.json();
   return (d.results || []).slice(0, 6).map((it) => ({
     full: it.image,
     thumb: it.thumbnail || it.image,
-    src: it.source || '',
+    src: it.source || 'ddg',
   }));
+}
+
+function decodeHtml(s) {
+  return String(s || '')
+    .replace(/&amp;/g, '&')
+    .replace(/&#x2f;/gi, '/')
+    .replace(/\\u002f/gi, '/')
+    .replace(/&quot;/g, '"');
 }

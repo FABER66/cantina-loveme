@@ -175,7 +175,16 @@ function guessCl(d) {
 }
 function num(v) {
   if (v == null) return 0;
-  const n = parseFloat(String(v).replace(/\./g, '').replace(',', '.').replace(/[^\d.-]/g, ''));
+  if (typeof v === 'number') return isNaN(v) ? 0 : v;
+  let s = String(v).trim().replace(/[^\d.,-]/g, '');
+  if (s.includes('.') && s.includes(',')) {
+    // formato "1.234,56" -> punto migliaia, virgola decimale
+    s = s.replace(/\./g, '').replace(',', '.');
+  } else if (s.includes(',')) {
+    // solo virgola -> decimale
+    s = s.replace(',', '.');
+  } // solo punto (o nessuno): il punto è già decimale (XML SDI / JSON)
+  const n = parseFloat(s);
   return isNaN(n) ? 0 : n;
 }
 function round2(n) {
